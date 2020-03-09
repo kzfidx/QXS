@@ -1,2 +1,3 @@
 # QXS
-Scripts for QX
+collected from internet
+My Scripts for QX
