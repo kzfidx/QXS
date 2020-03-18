@@ -1,40 +1,40 @@
 /*
-京東多合一簽到腳本
+京东多合一签到脚本
 
-更新於: 2020.3.12 0:10 v80
-有效接口: 21
+更新于: 2020.3.17 21:05 v83
+有效接口: 22
 
-該腳本同時兼容: QuantumultX, Surge, Loon, JSBox, Node.js
-如使用JSBox 或 Nodejs, 請自行抓取Cookie填入腳本Key處.
+该脚本同时兼容: QuantumultX, Surge, Loon, JSBox, Node.js
+如使用JSBox 或 Nodejs, 请自行抓取Cookie填入脚本Key处.
 
-JSbox, Node.js 抓取Cookie 說明:
+JSbox, Node.js 抓取Cookie 说明:
 
-開啓抓包app後, Safari瀏覽器登錄 https://bean.m.jd.com 點擊簽到並且出現簽到日曆後, 返回抓包app搜索關鍵字 functionId=signBean 複製請求頭Cookie填入腳本即可. 
-注: 如果複製的Cookie開頭為"Cookie: "請把它刪除後填入
+开启抓包app后, Safari浏览器登录 https://bean.m.jd.com 点击签到并且出现签到日历后, 返回抓包app搜索关键字 functionId=signBean 复制请求头Cookie填入脚本即可. 
+注: 如果复制的Cookie开头为"Cookie: "请把它删除后填入
 
 ~~~~~~~~~~~~~~~~
-Quantumult X, Surge, Loon 說明：
+Quantumult X, Surge, Loon 说明：
 
-初次使用時, 打開Safari瀏覽器登錄 https://bean.m.jd.com 點擊簽到獲取cookie, 請注意, 僅可網頁獲取!!!
-如果通知獲得cookie成功, 則可以使用此簽到腳本。
-由於cookie的有效性(經測試網頁Cookie有效週期最長31天)，如果腳本將來彈出cookie無效的通知，則需要重復上述步驟。
+初次使用时, 打开Safari浏览器登录 https://bean.m.jd.com 点击签到获取cookie, 请注意, 仅可网页获取!!!
+如果通知获得cookie成功, 则可以使用此签到脚本。
+由于cookie的有效性(经测试网页Cookie有效周期最长31天)，如果脚本将来弹出cookie无效的通知，则需要重复上述步骤。
 
-簽到腳本將在每天的凌晨0:05執行, 您可以修改執行時間。 
-因部分接口京豆限量領取, 建議調整為凌晨簽到。
+签到脚本将在每天的凌晨0:05执行, 您可以修改执行时间。 
+因部分接口京豆限量领取, 建议调整为凌晨签到。
 
-問題反饋: @NobyDa_bot
-TG頻道: @NobyDa
+问题反馈: @NobyDa_bot
+TG频道: @NobyDa
 
-如果轉載, 請注明出處.
+如果转载, 请注明出处.
 ~~~~~~~~~~~~~~~~
 
 Surge 4.0 或 Loon 2.1+ :
 
 [Script]
-# 京東多合一簽到
+# 京东多合一签到
 cron "5 0 * * *" script-path=https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js
 
-# 獲取京東Cookie.
+# 获取京东Cookie.
 http-request https:\/\/api\.m\.jd\.com\/client\.action.*functionId=signBean max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js
 
 ~~~~~~~~~~~~~~~~
@@ -42,13 +42,13 @@ http-request https:\/\/api\.m\.jd\.com\/client\.action.*functionId=signBean max-
 QX 1.0.5+ :
 
 [task_local]
-# 京東多合一簽到
-# 注意此為本地路徑, 請根據實際情況自行調整
+# 京东多合一签到
+# 注意此为本地路径, 请根据实际情况自行调整
 5 0 * * * JD_DailyBonus.js
 
 [rewrite_local]
-# 獲取京東Cookie. 
-# 注意此為本地路徑, 請根據實際情況自行調整.
+# 获取京东Cookie. 
+# 注意此为本地路径, 请根据实际情况自行调整.
 https:\/\/api\.m\.jd\.com\/client\.action.*functionId=signBean url script-request-header JD_DailyBonus.js
 
 ~~~~~~~~~~~~~~~~
@@ -56,42 +56,43 @@ QX 或 Surge 或 Loon MITM = api.m.jd.com
 ~~~~~~~~~~~~~~~~
 */
 
-var log = true; //是否開啓日誌, false則關閉
-var stop = 10; //自定義延遲簽到,單位毫秒,(如填200則每個接口延遲0.2秒執行),默認無延遲
+var log = true; //是否开启日志, false则关闭
+var stop = 0; //自定义延迟签到,单位毫秒,(如填200则每个接口延迟0.2秒执行),默认无延迟
 var $nobyda = nobyda();
 
-//  填此處↓↓↓
-var Key = ''; //如果使用JSBox或Node.js, 單引號內自行填寫您抓取的Cookie.
+//  填此处↓↓↓
+var Key = ''; //如果使用JSBox或Node.js, 单引号内自行填写您抓取的Cookie.
+//  现已加入JsBox持久化接口, 填写Cookie签到成功一次后, 后续JsBox用户更新脚本无需再次填写, 待Cookie失效后再填写即可.
 
-var KEY = Key?Key:$nobyda.read("CookieJD")
-async function all() {//簽到模塊相互獨立,您可注釋某一行以禁用某個接口.
-  await JingDongBean(stop); //京東京豆
+async function all() {//签到模块相互独立,您可注释某一行以禁用某个接口.
+  await JingDongBean(stop); //京东京豆
   await JingRongBean(stop); //金融京豆
-  await JingRongSteel(stop); //金融鋼鏰
-  await JingDongTurn(stop); //京東轉盤
-  await JRDoubleSign(stop); //金融雙簽
-  await JDGroceryStore(stop); //京東超市
-  await JingDongClocks(stop); //京東鐘錶館
-  await JingDongPet(stop); //京東寵物館
-  await JDFlashSale(stop); //京東閃購
-  await JingDongBook(stop); //京東圖書
-  await JDSecondhand(stop); //京東拍拍二手
-  await JingDMakeup(stop); //京東美妝館
-  await JingDongWomen(stop); //京東女裝館
-  await JingDongCash(stop); //京東現金紅包
-  await JingDongShoes(stop); //京東鞋靴館
-  //await JingRSeeAds(stop); //金融看廣告
-  await JingRongGame(stop); //金融遊戲大廳
-  await JingDongLive(stop); //京東智能生活館
-  await JingDongClean(stop); //京東清潔館
-  await JDPersonalCare(stop); //京東個人護理館
-  await JingDongPrize(stop); //京東抽大獎
-  await JingDongShake(stop); //京東搖一搖
+  await JingRongSteel(stop); //金融钢镚
+  await JingDongTurn(stop); //京东转盘
+  await JRDoubleSign(stop); //金融双签
+  await JDGroceryStore(stop); //京东超市
+  await JingDongClocks(stop); //京东钟表馆
+  await JingDongPet(stop); //京东宠物馆
+  await JDFlashSale(stop); //京东闪购
+  await JingDongBook(stop); //京东图书
+  await JDSecondhand(stop); //京东拍拍二手
+  await JingDMakeup(stop); //京东美妆馆
+  await JingDongWomen(stop); //京东女装馆
+  await JingDongCash(stop); //京东现金红包
+  await JingDongShoes(stop); //京东鞋靴馆
+  await JingDongFood(stop); //京东美食馆
+  //await JingRSeeAds(stop); //金融看广告
+  await JingRongGame(stop); //金融游戏大厅
+  await JingDongLive(stop); //京东智能生活馆
+  await JingDongClean(stop); //京东清洁馆
+  await JDPersonalCare(stop); //京东个人护理馆
+  await JingDongPrize(stop); //京东抽大奖
+  await JingDongShake(stop); //京东摇一摇
 
-  await TotalSteel(); //總鋼鏰查詢
-  await TotalCash(); //總紅包查詢
-  await TotalBean(); //總京豆查詢
-  await notify(); //通知模塊
+  await TotalSteel(); //总钢镚查询
+  await TotalCash(); //总红包查询
+  await TotalBean(); //总京豆查询
+  await notify(); //通知模块
 }
 
 var merge = {
@@ -112,6 +113,7 @@ var merge = {
   JRSeeAds:{success:0,fail:0,bean:0,steel:0,notify:''},
   JDLive:  {success:0,fail:0,bean:0,steel:0,notify:''},
   JDCare:  {success:0,fail:0,bean:0,steel:0,notify:''},
+  JDFood:  {success:0,fail:0,bean:0,steel:0,notify:''},
   JDClean: {success:0,fail:0,bean:0,steel:0,notify:''},
   JDPrize: {success:0,fail:0,bean:0,steel:0,notify:'',key:0},
   JRSteel: {success:0,fail:0,bean:0,steel:0,notify:'',TSteel:0},
@@ -123,8 +125,40 @@ if ($nobyda.isRequest) {
   GetCookie()
   $nobyda.done()
 } else {
-  all()
+  ReadCookie()
   $nobyda.done()
+}
+
+function ReadCookie() {
+  return new Promise(resolve => {
+    if (typeof $app != "undefined") {
+      var file = $file.exists("shared://JD_Cookie.txt")
+      if (Key) {
+        var write = $file.write({
+          data: $data({string: Key}),
+          path: "shared://JD_Cookie.txt"
+          })
+        KEY = Key
+        all()
+      } else {
+        if (file) {
+          KEY = $file.read("shared://JD_Cookie.txt").string
+          all()
+        } else {
+          $nobyda.notify("京東簽到", "", "腳本終止, 未填寫Cookie ‼️")
+        }
+      }
+      resolve('done')
+    } else {
+      KEY = Key?Key:$nobyda.read("CookieJD")
+      if (KEY) {
+        all()
+      } else {
+        $nobyda.notify("京東簽到", "", "腳本終止, 未獲取Cookie ‼️")
+      }
+      resolve('done')
+    }
+  });
 }
 
 function notify() {
@@ -1318,7 +1352,7 @@ function JDPersonalCare(s) {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded", Cookie: KEY,
       },
-      body: "body=%7B%22riskParam%22%3A%7B%22eid%22%3A%22O5X6JYMZTXIEX4VBCBWEM5PTIZV6HXH7M3AI75EABM5GBZYVQKRGQJ5A2PPO5PSELSRMI72SYF4KTCB4NIU6AZQ3O6C3J7ZVEP3RVDFEBKVN2RER2GTQ%22%2C%22shshshfpb%22%3A%22v1%5C%2FzMYRjEWKgYe%2BUiNwEvaVlrHBQGVwqLx4CsS9PH1s0s0Vs9AWk%2B7vr9KSHh3BQd5NTukznDTZnd75xHzonHnw%3D%3D%22%2C%22pageClickKey%22%3A%22Babel_Sign%22%2C%22childActivityUrl%22%3A%22https%3A%5C%2F%5C%2Fpro.m.jd.com%5C%2Fmall%5C%2Factive%5C%2FNJ1kd1PJWhwvhtim73VPsD1HwY3%5C%2Findex.html%3FcollectionId%3D294%22%7D%2C%22url%22%3A%22https%3A%5C%2F%5C%2Fpro.m.jd.com%5C%2Fmall%5C%2Factive%5C%2FNJ1kd1PJWhwvhtim73VPsD1HwY3%5C%2Findex.html%3FcollectionId%3D294%22%2C%22params%22%3A%22%7B%5C%22enActK%5C%22%3A%5C%22hStxilQclq7q78DPq3us0jpXuBIR%2B%5C%2FhnVJqzHJ7rlfMaZs%5C%2Fn4coLNw%3D%3D%5C%22%2C%5C%22isFloatLayer%5C%22%3Afalse%2C%5C%22ruleSrv%5C%22%3A%5C%2200167278_30642140_t1%5C%22%2C%5C%22signId%5C%22%3A%5C%22JkIbFVNv3ucaZs%5C%2Fn4coLNw%3D%3D%5C%22%7D%22%2C%22geo%22%3A%7B%22lng%22%3A%220.000000%22%2C%22lat%22%3A%220.000000%22%7D%7D&client=apple&clientVersion=8.5.2&d_brand=apple&openudid=1fce88cd05c42fe2b054e846f11bdf33f016d676&scope=11&sign=fa7e0f78e383b15c63e0958a5f399667&st=1583764925528&sv=112"
+      body: "body=%7B%22riskParam%22%3A%7B%22eid%22%3A%22O5X6JYMZTXIEX4VBCBWEM5PTIZV6HXH7M3AI75EABM5GBZYVQKRGQJ5A2PPO5PSELSRMI72SYF4KTCB4NIU6AZQ3O6C3J7ZVEP3RVDFEBKVN2RER2GTQ%22%2C%22shshshfpb%22%3A%22v1%5C%2FzMYRjEWKgYe%2BUiNwEvaVlrHBQGVwqLx4CsS9PH1s0s0Vs9AWk%2B7vr9KSHh3BQd5NTukznDTZnd75xHzonHnw%3D%3D%22%2C%22pageClickKey%22%3A%22Babel_Sign%22%2C%22childActivityUrl%22%3A%22https%3A%5C%2F%5C%2Fpro.m.jd.com%5C%2Fmall%5C%2Factive%5C%2FNJ1kd1PJWhwvhtim73VPsD1HwY3%5C%2Findex.html%3FcollectionId%3D294%22%7D%2C%22url%22%3A%22https%3A%5C%2F%5C%2Fpro.m.jd.com%5C%2Fmall%5C%2Factive%5C%2FNJ1kd1PJWhwvhtim73VPsD1HwY3%5C%2Findex.html%3FcollectionId%3D294%22%2C%22params%22%3A%22%7B%5C%22enActK%5C%22%3A%5C%22rglrZ7sRx6%5C%2FIqNLp1dDmLtTzbV1z8rZ5bgYbPORaFLkaZs%5C%2Fn4coLNw%3D%3D%5C%22%2C%5C%22isFloatLayer%5C%22%3Afalse%2C%5C%22ruleSrv%5C%22%3A%5C%2200167278_30903072_t1%5C%22%2C%5C%22signId%5C%22%3A%5C%22h7%5C%2FZa7aYrp8aZs%5C%2Fn4coLNw%3D%3D%5C%22%7D%22%2C%22geo%22%3A%7B%22lng%22%3A%220.000000%22%2C%22lat%22%3A%220.000000%22%7D%7D&client=apple&clientVersion=8.5.4&openudid=1fce88cd05c42fe2b054e846f11bdf33f016d676&scope=11&sign=f1d029460724ed474b5616a5ab03206f&st=1584364265234&sv=122"
     };
 
     $nobyda.post(JDPCUrl, function(error, response, data) {
@@ -1688,8 +1722,70 @@ function JingDongPrize(s) {
   });
 }
 
+function JingDongFood(s) {
+
+  return new Promise(resolve => { setTimeout(() => {
+    const JDMUrl = {
+      url: 'https://api.m.jd.com/client.action?functionId=userSign',
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded", Cookie: KEY,
+      },
+      body: "body=%7B%22params%22%3A%22%7B%5C%22enActK%5C%22%3A%5C%222tZC6DPgRUDcQS2TiaLg7bz0GjIWCxg6l6lGSY5qpyQaZs%2Fn4coLNw%3D%3D%5C%22%2C%5C%22isFloatLayer%5C%22%3Afalse%2C%5C%22signId%5C%22%3A%5C%223TljDz03josaZs%2Fn4coLNw%3D%3D%5C%22%7D%22%7D&client=wh5"
+    };
+
+    $nobyda.post(JDMUrl, function(error, response, data) {
+      try {
+        if (error) {
+          merge.JDFood.notify = "京東商城-美食: 簽到接口請求失敗 ‼️‼️"
+          merge.JDFood.fail = 1
+        } else {
+          const cc = JSON.parse(data)
+          if (data.match(/簽到成功/)) {
+            if (log) console.log("京東商城-美食簽到成功response: \n" + data)
+            if (data.match(/(\"text\":\"\d+京豆\")/)) {
+              beanQuantity = cc.awardList[0].text.match(/\d+/)
+              merge.JDFood.notify = "京東商城-美食: 成功, 明細: " + beanQuantity + "京豆 🐶"
+              merge.JDFood.bean = beanQuantity
+              merge.JDFood.success = 1
+            } else {
+              merge.JDFood.notify = "京東商城-美食: 成功, 明細: 無京豆 🐶"
+              merge.JDFood.success = 1
+            }
+          } else {
+            if (log) console.log("京東商城-美食簽到失敗response: \n" + data)
+            if (data.match(/(已簽到|已領取)/)) {
+              merge.JDFood.notify = "京東商城-美食: 失敗, 原因: 已簽過 ⚠️"
+              merge.JDFood.fail = 1
+            } else {
+              if (data.match(/(不存在|已結束)/)) {
+                merge.JDFood.notify = "京東商城-美食: 失敗, 原因: 活動已結束 ⚠️"
+                merge.JDFood.fail = 1
+              } else {
+                if (cc.code == 3) {
+                  merge.JDFood.notify = "京東商城-美食: 失敗, 原因: Cookie失效‼️"
+                  merge.JDFood.fail = 1
+                } else if (cc.code == "600") {
+                  merge.JDFood.notify = "京東商城-美食: 失敗, 原因: 認證失敗 ⚠️"
+                  merge.JDFood.fail = 1
+                } else {
+                  merge.JDFood.notify = "京東商城-美食: 失敗, 原因: 未知 ⚠️"
+                  merge.JDFood.fail = 1
+                }
+              }
+            }
+          }
+        }
+        resolve('done')
+      } catch (eor) {
+        $nobyda.notify("京東商城-美食" + eor.name + "‼️", JSON.stringify(eor), eor.message)
+        resolve('done')
+      }
+    })}, s)
+  });
+}
+
 function GetCookie() {
-  var CookieName = "京東";
+  var CookieName = "京东";
   if ($request.headers) {
     var CookieKey = "CookieJD";
     var CookieValue = $request.headers['Cookie'];
